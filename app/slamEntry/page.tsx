@@ -36,16 +36,16 @@ export default function SlamEntry() {
     messageForMe: ""
   })
 
-  const handleInputChange = (e: any) => {
-    const { name, value, type, files } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === "file" ? files[0] : value
-    }))
-  }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value, type, files } = e.target;
+  setFormData(prev => ({
+    ...prev,
+    [name]: type === "file" ? files?.[0] ?? null : value
+  }))
+}
 
-  const handleFormSubmit = async (e: any) => {
-    e.preventDefault();
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
     let imageUrl = null;
 
