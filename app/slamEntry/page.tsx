@@ -1,23 +1,10 @@
 'use client'
+
 import { supabase } from "@/lib/SupabaseClient"
+import { useState, useEffect } from "react"
 
-import { useState } from "react"
-import { useEffect } from "react"
 export default function SlamEntry() {
-  useEffect(() => {
-    async function getUser() {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      if (error) {
-        console.error("Error fetching user:", error.message)
-      } else {
-        localStorage.setItem('displayName',user?.user_metadata.full_name)
-        console.log("User details:", user)
-      }
-    }
-    getUser()
-  }, [])
-
-  const full_name = localStorage.getItem('displayName')
+  const [fullName, setFullName] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     nickname: "",
@@ -34,23 +21,43 @@ export default function SlamEntry() {
     favouriteMemory: "",
     crush: "",
     messageForMe: ""
-  })
+  });
+
+  useEffect(() => {
+    async function getUser() {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error("Error fetching user:", error.message);
+      } else {
+        const displayName = user?.user_metadata?.full_name ?? "";
+        localStorage.setItem("displayName", displayName);
+        setFullName(displayName);
+        console.log("User details:", user);
+      }
+    }
+
+    getUser();
+
+    // also restore from localStorage if present
+    const storedName = localStorage.getItem("displayName");
+    if (storedName) setFullName(storedName);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const { name, value, type, files } = e.target;
-  setFormData(prev => ({
-    ...prev,
-    [name]: type === "file" ? files?.[0] ?? null : value
-  }))
-}
+    const { name, value, type, files } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === "file" ? files?.[0] ?? null : value
+    }));
+  };
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+    e.preventDefault();
 
     let imageUrl = null;
 
     if (formData.image instanceof File) {
-      const fileExt = formData.image.name.split('.').pop();
+      const fileExt = formData.image.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `slam/${fileName}`;
 
@@ -72,12 +79,12 @@ export default function SlamEntry() {
 
     const { data, error } = await supabase
       .from("slambook")
-      .insert([{ ...formData, image: imageUrl }])
+      .insert([{ ...formData, name: formData.name || fullName, image: imageUrl }])
       .select();
 
     if (error) console.error("DB insert error:", error);
     else console.log("Inserted successfully:", data);
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-200 via-pink-200 to-green-200 p-6">
@@ -92,7 +99,14 @@ export default function SlamEntry() {
 
         {/* Personal Info */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          <input  className="input-style placeholder-gray-900" name="name" value={formData.name || full_name || ""} onChange={handleInputChange} placeholder="Enter your Name" type="text"/>
+          <input
+            className="input-style placeholder-gray-900"
+            name="name"
+            value={formData.name || fullName}
+            onChange={handleInputChange}
+            placeholder="Enter your Name"
+            type="text"
+          />
           <input className="input-style border-pink-400" name="nickname" value={formData.nickname} onChange={handleInputChange} placeholder="Nickname" type="text" />
           <input className="input-style border-green-400" name="birthday" value={formData.birthday} onChange={handleInputChange} type="date" />
           <input className="input-style border-orange-400" name="image" onChange={handleInputChange} type="file" />
@@ -127,5 +141,5 @@ export default function SlamEntry() {
         </button>
       </form>
     </div>
-  )
+  );
 }
