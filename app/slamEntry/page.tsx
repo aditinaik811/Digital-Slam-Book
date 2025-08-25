@@ -1,6 +1,6 @@
 'use client'
 import { supabase } from "@/lib/SupabaseClient"
-import { getDisplayName } from "next/dist/shared/lib/utils"
+
 import { useState } from "react"
 import { useEffect } from "react"
 export default function SlamEntry() {
